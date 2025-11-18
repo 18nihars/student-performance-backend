@@ -4,22 +4,23 @@ import pickle
 import numpy as np
 import sys
 import os
+
 from db import init_db, save_prediction, get_latest_predictions
 
-
-# Make model directory importable
-sys.path.append(os.path.abspath("../model"))
-from explain import explain_single  # <<< IMPORTANT
+# 🔥 Correct import path for Render & local
+sys.path.append(os.path.join(os.path.dirname(__file__), "model"))
+from model.explain import explain_single   # now works everywhere
 
 
 app = Flask(__name__)
 CORS(app)
 init_db()
 
-# Load advanced model pipeline
+# 🔥 Load model correctly (Render uses working directory)
 try:
-    model = pickle.load(open("../model/best_advanced_model.pkl", "rb"))
-    print("Model loaded successfully.")
+    model = pickle.load(open(os.path.join("model", "best_advanced_model.pkl"), "rb"))
+
+
 except Exception as e:
     print("Error loading model:", e)
     model = None
@@ -33,9 +34,11 @@ def health():
 @app.get("/")
 def index():
     return jsonify({
-        "message": "Welcome — available endpoints: /health (GET), /predict (POST).",
-        "note": "Use POST /predict with JSON payload for predictions."
+        "message": "Welcome — available endpoints: /health (GET), /predict (POST), /predictions (GET)",
+        "note": "Use POST /predict with JSON data."
     })
+
+
 @app.get("/predictions")
 def predictions():
     rows = get_latest_predictions(20)
@@ -73,21 +76,6 @@ def predict():
             output["prediction"],
             output["confidence"]
         )
-
-        return jsonify(output)
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
-
-    # POST → actual prediction
-    data = request.get_json()
-
-    if model is None:
-        return jsonify({"error": "Model not trained"}), 500
-
-    try:
-        # Use SHAP explainability system
-        output = explain_single(data)
 
         return jsonify(output)
 
