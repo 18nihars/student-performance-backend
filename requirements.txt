@@ -4,3 +4,4 @@ Flask-Cors
 pandas
 numpy
 scikit-learn
+xgboost
