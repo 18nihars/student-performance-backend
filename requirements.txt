@@ -1,0 +1,6 @@
+# Backend requirements
+Flask
+Flask-Cors
+pandas
+numpy
+scikit-learn
